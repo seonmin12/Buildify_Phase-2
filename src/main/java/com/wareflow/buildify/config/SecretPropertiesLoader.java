@@ -17,8 +17,9 @@ public class SecretPropertiesLoader implements ServletContextListener {
             String jsKey = props.getProperty("kakao.javascript.key");
             sce.getServletContext().setAttribute("kakaoRestKey", restKey);
             sce.getServletContext().setAttribute("kakaoJavascriptKey", jsKey);
-            System.out.println("🔑 Loaded Kakao REST API Key = " + restKey);
-            System.out.println("🌐 Loaded Kakao JavaScript Key = " + jsKey);
+            // 키 값 자체는 로그에 남기지 않고 주입 여부만 확인합니다.
+            System.out.println("🔑 Kakao REST API Key loaded = " + (restKey != null && !restKey.isEmpty()));
+            System.out.println("🌐 Kakao JavaScript Key loaded = " + (jsKey != null && !jsKey.isEmpty()));
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to load kakaoApiKey from application-secret.properties", e);

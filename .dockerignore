@@ -1,0 +1,15 @@
+# 빌드 컨텍스트에서 제외 (이미지 크기/빌드 속도)
+.git
+.github
+.gradle
+.idea
+build
+# entrypoint.sh 는 이미지에 필요하므로 docker/ 전체를 제외하면 안 됩니다.
+docker/mysql
+*.md
+docker-compose.yml
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore

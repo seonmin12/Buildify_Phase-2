@@ -1,0 +1,24 @@
+# =====================================================================
+# 배포 서버(EC2)용 오버라이드
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# 기본 docker-compose.yml 위에 얹어서 메모리 제한만 조정합니다.
+# t3.micro(RAM 1GB) 기준이며, 앱과 MySQL 이 서로의 메모리를 잠식하지 않도록
+# 상한을 명시합니다. (스왑 4GB 가 설정되어 있다는 전제)
+#
+# 공개 포트(80)는 .env 의 APP_PORT=80 으로 지정합니다.
+# MySQL 은 기본 설정에서 이미 127.0.0.1 로만 바인딩되어 외부에 노출되지 않습니다.
+# =====================================================================
+
+services:
+  mysql:
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  app:
+    mem_limit: 640m
+    mem_reservation: 320m
+    environment:
+      # 컨테이너 상한(640m)보다 힙을 낮게 잡아 OOM Killer 를 피합니다.
+      JAVA_OPTS: "-Xms128m -Xmx384m -Duser.timezone=Asia/Seoul -Dfile.encoding=UTF-8"

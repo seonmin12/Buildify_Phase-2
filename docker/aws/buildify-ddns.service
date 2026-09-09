@@ -1,0 +1,23 @@
+# 부팅 시 현재 공인 IP 를 Cloudflare DNS 에 반영합니다.
+#
+# 설치:
+#   sudo cp docker/aws/cloudflare-ddns.sh /usr/local/bin/
+#   sudo chmod +x /usr/local/bin/cloudflare-ddns.sh
+#   sudo cp docker/aws/buildify-ddns.service /etc/systemd/system/
+#   sudo systemctl enable --now buildify-ddns.service
+
+[Unit]
+Description=Update Cloudflare DNS A record with current EC2 public IP
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/cloudflare-ddns.sh
+# 부팅 직후 네트워크가 불안정할 수 있어 실패 시 재시도합니다.
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

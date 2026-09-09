@@ -1,0 +1,69 @@
+# =====================================================================
+# BuildiFy WMS - 로컬/단일서버 실행용 Compose
+#
+#   docker compose up -d --build   →  http://localhost:8080
+#
+# 앱은 기동 시(@PostConstruct) 대시보드 뷰를 조회하므로,
+# MySQL 초기화(스키마 → 시드 → 뷰/프로시저)가 끝난 뒤에 떠야 합니다.
+# 그래서 healthcheck + service_healthy 로 순서를 강제합니다.
+# =====================================================================
+
+services:
+  mysql:
+    image: mysql:8.0            # Connector/J 8.0.21 과의 호환성 때문에 8.4 가 아닌 8.0 고정
+    container_name: buildify-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-buildifydb}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+09:00
+      # 프리티어(1GB RAM) 대비 메모리 절약 설정
+      - --performance-schema=OFF
+      - --innodb-buffer-pool-size=128M
+    ports:
+      # 로컬에서 DB 를 직접 붙어볼 때만 사용합니다.
+      # 서버 배포 시에는 이 줄을 지우거나 127.0.0.1 로 묶어 외부 노출을 막으세요.
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 파일명 순서대로 실행됩니다: 01 스키마 → 02 시드 → 03 뷰/프로시저/트리거
+      # (최초 1회, 데이터 볼륨이 비어 있을 때만 실행)
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: buildify-wms:latest
+    container_name: buildify-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-buildifydb}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      KAKAO_REST_KEY: ${KAKAO_REST_KEY:-}
+      KAKAO_JAVASCRIPT_KEY: ${KAKAO_JAVASCRIPT_KEY:-}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+      TZ: Asia/Seoul
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  mysql-data:

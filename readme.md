@@ -1,20 +1,40 @@
 # WareFlow - 📦 BuildiFy - WMS 시스템 (2차 프로젝트)
 
+![Java](https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white)
+![Spring](https://img.shields.io/badge/Spring-5.3.27-6DB33F?logo=spring&logoColor=white)
+![MyBatis](https://img.shields.io/badge/MyBatis-3.5.9-000000)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
+![Tomcat](https://img.shields.io/badge/Tomcat-9.0-F8DC75?logo=apachetomcat&logoColor=black)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+
+창고 운영 전 과정을 웹으로 자동화·시각화하는 WMS(창고 관리 시스템)입니다.
+**Docker 한 줄로 전체 환경이 재현되며, AWS EC2 배포 구성을 포함합니다.**
+
+```bash
+cp .env.example .env && docker compose up -d --build   #  http://localhost:8080
+```
+
+| 구분 | 계정 | 비밀번호 |
+|------|------|----------|
+| 관리자 | `admin01` | `admin1234!` |
+| 사용자 | `user01` ~ `user20` | `user1234!` |
+
 <br>
 
 ## 목차  
 1.	[프로젝트 개요](#프로젝트-개요)  
-2.	[기술 스택](#기술스택)
-3.	[배포 환경](#배포환경)
-4.	[프로젝트 구조](#프로젝트구조)
-5.	[ERD](#ERD)
-6.	[프로젝트 실행 가이드](#프로젝트-실행-가이드)
-7.	[주요 기능](#주요-기능)
-8.	[Trouble-Shooting](#trouble-shooting)
-9.	[팀원](#팀원)
-10.	[커밋·PR·이슈 컨벤션](#커밋pr이슈-컨벤션)
-11.	[메서드 네이밍 규칙](#메서드명-네이밍-규칙-spring-project)
-12.	[프로젝트 요약](#프로젝트요약)
+2.	[화면 미리보기](#-화면-미리보기)
+3.	[기술 스택](#기술스택)
+4.	[배포 환경](#배포환경)
+5.	[프로젝트 구조](#프로젝트구조)
+6.	[ERD](#ERD)
+7.	[프로젝트 실행 가이드](#프로젝트-실행-가이드)
+8.	[주요 기능](#주요-기능)
+9.	[Trouble-Shooting](#trouble-shooting)
+10.	[팀원](#팀원)
+11.	[커밋·PR·이슈 컨벤션](#커밋pr이슈-컨벤션)
+12.	[메서드 네이밍 규칙](#메서드명-네이밍-규칙-spring-project)
+13.	[프로젝트 요약](#프로젝트요약)
 
 
 
@@ -30,6 +50,43 @@
     
 등을 통해 물류 운영 비용을 절감하고, 사용자 편의성을 극대화하는 것입니다.
 
+
+---
+
+## 🖥 화면 미리보기
+
+> 아래 화면은 `docker compose up -d --build` 한 번으로 재현됩니다.
+> 데모 데이터(상품 100 / 재고 100 / 입고 120 / 출고 100 / 회원 20)가 자동 적재됩니다.
+
+### 관리자 대시보드
+당일·주간 입출고 지표, 창고별 계약률/사용률, 물류 뉴스(구글 뉴스 RSS)를 한 화면에 제공합니다.
+
+![관리자 대시보드](docs/images/02-dashboard.png)
+
+### 재고 조회
+카테고리 3단계 필터·검색·정렬·페이징을 지원하며 Excel 내보내기가 가능합니다.
+
+![재고 조회](docs/images/03-inventory.png)
+
+<details>
+<summary>다른 화면 더 보기</summary>
+
+### 입고 현황 조회
+요청/승인/반려 상태와 처리일, 배정 창고를 함께 조회합니다.
+
+![입고 현황](docs/images/04-inbound.png)
+
+### 창고 계약 조회
+회원별 임대 계약 기간과 잔여 일수, 월 이용료를 관리합니다.
+
+![창고 계약](docs/images/05-lease.png)
+
+### 로그인
+Spring Security 기반 인증, 역할(관리자/사용자)에 따라 진입 화면이 분기됩니다.
+
+![로그인](docs/images/01-login.png)
+
+</details>
 
 ---
 
@@ -52,8 +109,11 @@
 
 ## 🚀 배포환경
 - 개발환경: Local (MacOS / Windows)
-- 서버: Tomcat 9.X
+- 서버: Tomcat 9.X (`javax.servlet` 기반 — Tomcat 10 이상 미지원)
 - DB: MySQL 8.x
+- 컨테이너: Docker / Docker Compose (앱 + MySQL, `docker compose up -d --build`)
+- 클라우드: AWS EC2 (Amazon Linux 2023) — 배포 절차는 [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md) 참고
+- 도메인/HTTPS: Cloudflare — 설정 절차는 [docs/DOMAIN-HTTPS.md](docs/DOMAIN-HTTPS.md) 참고
 
 
 ---
@@ -129,36 +189,101 @@ src/main/webapp
 ---
 
 ## 프로젝트 실행 가이드
- 1. **환경 준비**  
-   - Gradle 설치 (wrapper 사용 시 별도 설치 불필요)  
 
-2. **DB 설정**  
-   - `src/main/resources/application-secret.properties` 에서 DB 접속 정보 설정
-     
-     ```properties
-     application-secret.driver=com.mysql.cj.jdbc.Driver
-     application-secret.url=jdbc:mysql://localhost:3306//buildifydb?serverTimezone=Asia/Seoul
-     application-secret.username=YOUR_DB_USER
-     application-secret.password=YOUR_DB_PASSWORD
+### 방법 A. Docker 로 실행 (권장)
 
-     ```
+MySQL 설치 없이 앱 + DB 를 한 번에 띄웁니다. **필요한 것은 Docker 뿐입니다.**
 
-3. **앱 실행**  
-     ```bash
-     cd 프로젝트_루트_디렉터리
-     ./gradlew clean build
-     ./gradlew bootRun
-     정상 구동 시 http://localhost:8080 에 접속 가능
-    
-4. **캐시/뷰 리소스 적용**  
-     ```
-     cache 패키지의 Singleton 빈이 정상 등록되었는지 확인
-	    src/main/webapp/static 내 CSS/JS 파일 변경 시 브라우저 캐시 비우기
+```bash
+git clone <repo-url>
+cd Buildify_Phase-2
 
-5. **테스트 실행**  
-     ```
-     bash
-     ./gradlew test
+cp .env.example .env      # DB 비밀번호 등을 채워 넣습니다
+docker compose up -d --build
+```
+
+기동 후 <http://localhost:8080> 접속.
+
+| 구분 | 계정 | 비밀번호 |
+|------|------|----------|
+| 관리자 | `admin01` (그 외 `admin02`, `admin03`) | `admin1234!` |
+| 사용자 | `user01` ~ `user20` | `user1234!` |
+
+> 데모 데이터(상품 100 / 재고 100 / 입고 120 / 출고 100 / 회원 20)가 자동으로 적재됩니다.
+> 날짜는 실행 시점 기준 상대값이라 언제 띄워도 대시보드 통계가 채워집니다.
+
+**구성**
+
+| 파일 | 역할 |
+|------|------|
+| `Dockerfile` | Gradle 빌드 → Tomcat 9 이미지에 `ROOT.war` 배치 (Boot 가 아니라 WAR 방식) |
+| `docker-compose.yml` | 앱 + MySQL 8.0, DB healthcheck 후 앱 기동 |
+| `docker/entrypoint.sh` | 환경변수 → `application-secret.properties` 생성 |
+| `docker/mysql/init/01-schema.sql` | 테이블 DDL |
+| `docker/mysql/init/02-seed.sql` | 데모 시드 데이터 |
+| `docker/mysql/init/03-objects.sql` | 뷰 / 프로시저 / 트리거 |
+
+**자주 쓰는 명령**
+
+```bash
+docker compose logs -f app      # 앱 로그
+docker compose down             # 중지 (데이터 유지)
+docker compose down -v          # 중지 + DB 초기화 (시드 다시 적재)
+```
+
+> DB 초기화 스크립트는 **볼륨이 비어 있을 때 최초 1회만** 실행됩니다.
+> 시드를 다시 넣으려면 `docker compose down -v` 후 다시 올리세요.
+
+### 방법 B. 로컬 Tomcat 으로 실행
+
+1. **환경 준비** — JDK 17, MySQL 8.x, **Tomcat 9.x**
+   (`javax.servlet` 기반이라 Tomcat 10 이상에서는 동작하지 않습니다)
+
+2. **DB 준비**
+
+   ```bash
+   mysql -u root -p -e "CREATE DATABASE buildifydb DEFAULT CHARACTER SET utf8mb4;"
+   mysql -u root -p buildifydb < docker/mysql/init/01-schema.sql
+   mysql -u root -p buildifydb < docker/mysql/init/02-seed.sql
+   mysql -u root -p buildifydb < docker/mysql/init/03-objects.sql
+   ```
+
+3. **설정 파일 작성** — `src/main/resources/application-secret.properties`
+   (이 파일은 `.gitignore` 대상이며 **절대 커밋하지 않습니다**)
+
+   ```properties
+   application-secret.driver=com.mysql.cj.jdbc.Driver
+   application-secret.url=jdbc:mysql://localhost:3306/buildifydb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+   application-secret.username=YOUR_DB_USER
+   application-secret.password=YOUR_DB_PASSWORD
+
+   # 외부 API 키 (비워 두면 해당 기능만 비활성화되고 기동은 정상)
+   kakao.rest.key=
+   kakao.javascript.key=
+   openweather.api.key=
+   news.api.key=
+   ```
+
+4. **빌드 및 배포**
+
+   ```bash
+   ./gradlew clean war
+   # build/libs/buildify-wms-0.0.1-SNAPSHOT.war 를
+   # Tomcat 의 ROOT 컨텍스트(/)로 배포합니다.
+   ```
+
+   > 로그인 성공 후 `/admin/pages/index` 처럼 루트 기준 절대경로로 리다이렉트하므로
+   > **반드시 ROOT 컨텍스트(`/`)로 배포**해야 합니다.
+
+5. **테스트 실행**
+
+   ```bash
+   ./gradlew test
+   ```
+
+   > 테스트는 `root-context.xml` 을 직접 로드하므로 **실행 중인 MySQL 이 필요합니다.**
+   > DB 없이 빌드하려면 `./gradlew war -x test` 를 사용하세요.
+
 ---
 
 ## 🛠 주요 기능
