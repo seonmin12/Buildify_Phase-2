@@ -1,0 +1,14 @@
+# 3분마다 새 이미지를 확인합니다.
+# 부팅 직후에도 한 번 실행해, 꺼져 있던 동안 올라온 변경을 반영합니다.
+
+[Unit]
+Description=Check for new Buildify WMS image periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=3min
+AccuracySec=30s
+Unit=buildify-update.service
+
+[Install]
+WantedBy=timers.target

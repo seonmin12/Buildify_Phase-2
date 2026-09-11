@@ -1,0 +1,21 @@
+# GHCR 의 최신 이미지를 확인해 애플리케이션을 교체합니다.
+# buildify-update.timer 가 주기적으로 실행합니다.
+#
+# 설치:
+#   sudo cp docker/aws/update-app.sh /usr/local/bin/
+#   sudo chmod +x /usr/local/bin/update-app.sh
+#   sudo cp docker/aws/buildify-update.service docker/aws/buildify-update.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now buildify-update.timer
+
+[Unit]
+Description=Pull latest Buildify WMS image and restart the app if changed
+After=docker.service network-online.target
+Wants=docker.service network-online.target
+
+[Service]
+Type=oneshot
+User=ec2-user
+Environment=REPO_DIR=/home/ec2-user/buildify
+ExecStart=/usr/local/bin/update-app.sh
+TimeoutStartSec=900

@@ -1,0 +1,19 @@
+# =====================================================================
+# GHCR 이미지 사용 오버레이 (운영 서버용)
+#
+#   docker compose -f docker-compose.yml \
+#                  -f docker-compose.prod.yml \
+#                  -f docker-compose.tls.yml \
+#                  -f docker-compose.ghcr.yml up -d
+#
+# 서버에서 직접 빌드하지 않고, CD 워크플로가 만들어 둔 이미지를 받아 씁니다.
+# t3.micro(RAM 1GB) 에서 Gradle 빌드를 돌리면 10~20분이 걸리지만
+# 이 방식은 이미지 내려받기만 하므로 2~3분이면 끝납니다.
+# =====================================================================
+
+services:
+  app:
+    image: ghcr.io/seonmin12/buildify_phase-2:latest
+    # 서버에서는 빌드하지 않습니다.
+    build: !reset null
+    pull_policy: always

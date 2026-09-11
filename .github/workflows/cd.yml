@@ -1,0 +1,82 @@
+name: CD
+
+# dev 브랜치에 반영되면 이미지를 빌드해 GHCR 에 올립니다.
+#
+# 왜 이렇게 하는가:
+#   운영 서버가 t3.micro(RAM 1GB) 라서 서버에서 Gradle 빌드를 돌리면
+#   스왑을 긁으며 10~20분이 걸립니다. 빌드를 러너로 옮기고 서버는
+#   완성된 이미지만 받아 교체하도록 해서 배포 시간을 2~3분으로 줄입니다.
+#
+# 서버는 buildify-update.timer 가 주기적으로 새 이미지를 확인해 교체합니다.
+# (인바운드 SSH 를 열지 않기 위해 서버가 가져가는 pull 방식을 택했습니다)
+
+on:
+  push:
+    branches: [dev]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  workflow_dispatch:
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: GHCR 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 이미지 메타데이터
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          # 운영 서버가 x86_64 t3.micro 이므로 amd64 만 만듭니다.
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 결과 요약
+        run: |
+          {
+            echo "### 이미지 푸시 완료"
+            echo ""
+            echo '```'
+            echo "${{ steps.meta.outputs.tags }}"
+            echo '```'
+            echo ""
+            echo "서버는 buildify-update.timer 가 확인해 자동으로 교체합니다."
+          } >> "$GITHUB_STEP_SUMMARY"
