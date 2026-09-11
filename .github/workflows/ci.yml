@@ -1,0 +1,118 @@
+name: CI
+
+# push / PR 마다 빌드와 테스트를 수행합니다.
+#
+# 이 프로젝트의 테스트는 실행 중인 MySQL 을 요구합니다.
+# (테스트가 root-context.xml 을 직접 로드하고, 그 안에서 HikariCP 가 DB 에 연결)
+# 그래서 MySQL 을 서비스 컨테이너로 띄우고, 운영과 동일한 초기화 스크립트
+# (스키마 → 시드 → 뷰·프로시저·트리거)를 적재한 뒤 테스트를 돌립니다.
+
+on:
+  push:
+    branches: [dev, "deploy/**"]
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci_root_pw
+          MYSQL_DATABASE: buildifydb
+          MYSQL_USER: buildify
+          MYSQL_PASSWORD: ci_app_pw
+          TZ: Asia/Seoul
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci_root_pw"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: JDK 17 설치
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Gradle 설정 (의존성 캐시)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: MySQL 준비 대기
+        run: |
+          for i in $(seq 1 60); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -pci_root_pw --silent 2>/dev/null; then
+              echo "MySQL 준비 완료"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL 이 준비되지 않았습니다" >&2
+          exit 1
+
+      - name: DB 초기화 (스키마 → 시드 → 뷰/프로시저/트리거)
+        run: |
+          for f in docker/mysql/init/01-schema.sql \
+                   docker/mysql/init/02-seed.sql \
+                   docker/mysql/init/03-objects.sql; do
+            echo "적재: $f"
+            mysql -h 127.0.0.1 -P 3306 -uroot -pci_root_pw buildifydb < "$f"
+          done
+          mysql -h 127.0.0.1 -P 3306 -uroot -pci_root_pw buildifydb \
+            -e "SELECT (SELECT COUNT(*) FROM product) AS products,
+                       (SELECT COUNT(*) FROM inbound) AS inbound,
+                       (SELECT COUNT(*) FROM user) AS users;"
+
+      - name: 테스트 설정 파일 생성
+        # 앱은 설정을 classpath 의 application-secret.properties 에서만 읽습니다.
+        # 저장소에 두지 않으므로 CI 에서 생성합니다. 외부 API 키는 비워 둡니다.
+        #
+        # main 이 아니라 test 리소스에 두는 이유: main/resources 에 두면
+        # WAR 산출물과 Docker 이미지에 자격증명이 그대로 패키징됩니다.
+        run: |
+          mkdir -p src/test/resources
+          cat > src/test/resources/application-secret.properties <<'EOF'
+          application-secret.driver=com.mysql.cj.jdbc.Driver
+          application-secret.url=jdbc:mysql://127.0.0.1:3306/buildifydb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+          application-secret.username=root
+          application-secret.password=ci_root_pw
+
+          kakao.rest.key=
+          kakao.javascript.key=
+          openweather.api.key=
+          EOF
+
+      - name: 빌드 및 테스트
+        run: ./gradlew clean build --no-daemon
+
+      - name: 테스트 리포트 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            build/reports/tests/test
+            build/test-results/test
+          retention-days: 7
+
+      - name: WAR 산출물 업로드
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildify-wms-war
+          path: build/libs/*.war
+          retention-days: 7

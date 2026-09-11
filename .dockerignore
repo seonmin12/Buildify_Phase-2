@@ -13,3 +13,7 @@ docker-compose.yml
 !.env.example
 Dockerfile
 .dockerignore
+
+# 설정 파일은 컨테이너 시작 시 entrypoint 가 생성합니다.
+# 실수로 이미지에 구워지지 않도록 제외합니다.
+application-secret.properties
