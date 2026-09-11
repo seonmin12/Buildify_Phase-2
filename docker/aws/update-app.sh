@@ -8,6 +8,10 @@
 #   새 이미지를 확인하도록 해서 인바운드 노출을 늘리지 않습니다.
 #
 # 설치: docker/aws/buildify-update.service / .timer 참고
+#
+# 주의: /usr/local/bin 으로 복사해 사용하므로, 이 스크립트 자체를 수정한 뒤에는
+#       서버에서 다시 복사해야 반영됩니다.
+#       sudo cp docker/aws/update-app.sh /usr/local/bin/
 # =====================================================================
 set -euo pipefail
 
@@ -28,23 +32,26 @@ log "저장소 갱신"
 git fetch -q origin dev
 git reset -q --hard origin/dev
 
-# 2. 교체 전 이미지 다이제스트 기록
-BEFORE="$(docker compose "${COMPOSE_FILES[@]}" images -q app 2>/dev/null || true)"
+# 2. 교체 전 컨테이너 ID 기록
+#    docker compose images 는 "실행 중인 컨테이너의" 이미지를 돌려주므로
+#    pull 전후를 비교해도 값이 같습니다. 컨테이너 재생성 여부로 판단합니다.
+BEFORE_CID="$(docker compose "${COMPOSE_FILES[@]}" ps -q app 2>/dev/null || true)"
 
 # 3. 최신 이미지 받기
 log "이미지 확인"
 docker compose "${COMPOSE_FILES[@]}" pull -q app
 
-AFTER="$(docker compose "${COMPOSE_FILES[@]}" images -q app 2>/dev/null || true)"
+# 4. 적용 (이미지나 설정이 바뀐 경우에만 compose 가 컨테이너를 재생성합니다)
+docker compose "${COMPOSE_FILES[@]}" up -d --no-deps app
 
-if [ -n "${BEFORE}" ] && [ "${BEFORE}" = "${AFTER}" ]; then
-  log "변경 없음 - 교체를 건너뜁니다."
+AFTER_CID="$(docker compose "${COMPOSE_FILES[@]}" ps -q app 2>/dev/null || true)"
+
+if [ "${BEFORE_CID}" = "${AFTER_CID}" ]; then
+  log "변경 없음 - 컨테이너를 그대로 유지합니다."
   exit 0
 fi
 
-# 4. 교체 (mysql·caddy 는 그대로 두고 app 만 재생성)
-log "새 이미지로 교체: ${BEFORE:0:12} → ${AFTER:0:12}"
-docker compose "${COMPOSE_FILES[@]}" up -d --no-deps app
+log "컨테이너 교체됨: ${BEFORE_CID:0:12} → ${AFTER_CID:0:12}"
 
 # 5. 기동 확인
 for i in $(seq 1 30); do
