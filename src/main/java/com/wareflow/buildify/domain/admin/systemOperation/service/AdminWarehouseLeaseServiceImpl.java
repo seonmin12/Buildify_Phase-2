@@ -110,6 +110,15 @@ public class AdminWarehouseLeaseServiceImpl implements AdminWarehouseLeaseServic
         }
         log.info("서비스 리스트 : {}", voList.size());
 
+        // 변경 대상이 없으면 여기서 종료한다.
+        // MyBatis <foreach> 는 빈 리스트에 대해 아무것도 생성하지 않으므로,
+        // 그대로 mapper 를 호출하면 "SET ... CASE END WHERE ... IN ()" 형태의
+        // 문법이 깨진 SQL 이 만들어져 BadSqlGrammarException 이 발생한다.
+        if (voList.isEmpty()) {
+            log.info("변경 대상이 없어 업데이트를 수행하지 않습니다.");
+            return 0;
+        }
+
         // 3. 캐시 동기화 (싱글톤 리스트 갱신)
         WarehouseLeaseListCache.getInstance(adminWarehouseLeaseMapper.getUserLeaseInfo());
         List<WarehouseLeaseDTO> singletonList = WarehouseLeaseListCache.getInstance().getWarehouseLeaseList();
