@@ -83,9 +83,17 @@ fi
 
 # buildx 는 Compose 의 `--build` 에 필요하지만 Amazon Linux 의 docker 패키지에
 # 포함되어 있지 않아 별도로 설치합니다. (없으면 "requires buildx 0.17.0 or later" 오류)
-if docker buildx version > /dev/null 2>&1; then
-  echo "buildx 가 이미 설치되어 있습니다: $(docker buildx version)"
+# Amazon Linux 의 docker 패키지에 buildx 가 포함되는 경우가 있으나 버전이 낮아
+# Compose 가 요구하는 0.17.0 을 만족하지 못할 수 있습니다. 버전까지 확인합니다.
+BUILDX_MIN="0.17.0"
+BUILDX_CURRENT="$(docker buildx version 2>/dev/null | sed -n 's/.*v\{0,1\}\([0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\).*/\1/p' | head -1)"
+if [ -n "${BUILDX_CURRENT}" ] \
+   && [ "$(printf '%s\n' "${BUILDX_MIN}" "${BUILDX_CURRENT}" | sort -V | head -1)" = "${BUILDX_MIN}" ]; then
+  echo "buildx ${BUILDX_CURRENT} 가 이미 설치되어 있습니다 (최소 ${BUILDX_MIN} 충족)"
 else
+  if [ -n "${BUILDX_CURRENT}" ]; then
+    echo "buildx ${BUILDX_CURRENT} 는 최소 요구 버전(${BUILDX_MIN})보다 낮아 최신 버전으로 교체합니다."
+  fi
   BUILDX_VERSION="$(curl -fsSL https://api.github.com/repos/docker/buildx/releases/latest 2>/dev/null \
     | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)"
   BUILDX_VERSION="${BUILDX_VERSION:-$BUILDX_FALLBACK_VERSION}"
