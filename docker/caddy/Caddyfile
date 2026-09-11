@@ -1,0 +1,40 @@
+# =====================================================================
+# Caddy 리버스 프록시 - Cloudflare Origin 인증서로 TLS 종료
+#
+# Cloudflare 암호화 모드를 Full (strict) 로 쓰면 Cloudflare 가 원본 서버에
+# HTTPS(443)로 접속합니다. 이 설정이 그 443 을 받아 Tomcat(8080)으로 넘깁니다.
+#
+# Cloudflare Origin 인증서는 Cloudflare 엣지만 신뢰하는 사설 인증서라
+# Let's Encrypt 처럼 갱신할 필요가 없습니다(유효기간 15년).
+# 그래서 Caddy 의 자동 인증서 발급 기능은 껐습니다.
+# =====================================================================
+
+{
+	# 자동 HTTPS(Let's Encrypt) 비활성화 - Origin 인증서를 직접 씁니다.
+	auto_https off
+	# 관리 API 는 쓰지 않습니다.
+	admin off
+}
+
+# Cloudflare → 원본 (HTTPS)
+https://buildify-wms.co.kr {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+
+	# 원본 IP 대신 실제 방문자 IP 를 애플리케이션에 전달합니다.
+	reverse_proxy app:8080 {
+		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+		header_up X-Forwarded-Proto https
+	}
+
+	encode gzip
+
+	log {
+		output stderr
+		format console
+	}
+}
+
+# 상태 확인용 (Cloudflare 를 거치지 않고 서버 안에서 점검할 때)
+:8081 {
+	respond /healthz "ok" 200
+}
