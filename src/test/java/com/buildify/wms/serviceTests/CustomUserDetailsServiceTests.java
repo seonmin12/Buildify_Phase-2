@@ -25,7 +25,7 @@ public class CustomUserDetailsServiceTests {
     @Test
     @Transactional
     public void testLoadUserByUsername() {
-        String testId = "admin001"; // 실제 존재하는 auth id
+        String testId = "admin01"; // 실제 존재하는 auth id
         UserDetails userDetails = userDetailsService.loadUserByUsername(testId);
 
         log.info("✅ 사용자 ID: {}", userDetails.getUsername());

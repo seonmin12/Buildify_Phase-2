@@ -24,7 +24,7 @@ public class AdminLoginMapperTests {
     @Test
     @Transactional
     public void testFindByUsername() {
-        AdminVO adminVO = adminLoginMapper.findById("admin001");
+        AdminVO adminVO = adminLoginMapper.findById("admin01");
         log.info("admin : " + adminVO.toString());
     }
 }

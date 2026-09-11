@@ -38,7 +38,7 @@ public class InboundMapperTests {
     public void testInboundList() {
         // given
         ProductVO clientId = new ProductVO();
-        clientId.setClientId("USR-250428-UEWLVR"); // 여기에 실제 존재하는 clientId 넣기
+        clientId.setClientId("CLI-20240301-0001"); // 여기에 실제 존재하는 clientId 넣기
 
         List<ProductVO> productList = userInboundMapper.inboundList(clientId);
         // then
@@ -53,7 +53,7 @@ public class InboundMapperTests {
     @Transactional
     public void testinboundInsertlist() {
         ProductVO clientId = new ProductVO();
-        clientId.setClientId("USR-250428-UEWLVR"); // 여기에 실제 존재하는 clientId 넣기
+        clientId.setClientId("CLI-20240301-0001"); // 여기에 실제 존재하는 clientId 넣기
 
         List<ProductVO> productList = userInboundMapper.inboundList(clientId);
         // then
@@ -66,7 +66,7 @@ public class InboundMapperTests {
     @Transactional
     public void testgetInboundInsert() {
         // given
-        String prodId = "PRD-250428-1FPSKR"; // 실제 존재하는 prodId 넣기
+        String prodId = "PRD-0001"; // 실제 존재하는 prodId 넣기
 
         List<String> prodIds = new ArrayList<>();
         prodIds.add(prodId);
@@ -82,7 +82,7 @@ public class InboundMapperTests {
         @Transactional
         public void testinsertware () {
             // given
-            String prodId = "USR-250428-UEWLVR"; // 실제 존재하는 prodId 넣기
+            String prodId = "CLI-20240301-0001"; // 실제 존재하는 prodId 넣기
 
             List<String> prodIds = new ArrayList<>();
             prodIds.add(prodId);

@@ -34,11 +34,8 @@ public class WarehouseViewServiceTests {
         Map<String,Map<String, List<WarehouseViewDTO>>> layoutmap = adminWarehouseService.getWarehouseList();
 
         log.info(layoutmap.size());
-        log.info(layoutmap.get("W001").get("A1"));
-        log.info(layoutmap.get("W001").get("A2"));
-        log.info(layoutmap.get("W001").get("A3"));
-        log.info(layoutmap.get("W001").get("A4"));
-        log.info(layoutmap.get("W001").get("A5"));
+        log.info("창고 목록 : {}", layoutmap.keySet());
+        log.info("WH01 배치 : {}", layoutmap.get("WH01"));
 
     }
 

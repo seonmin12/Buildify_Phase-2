@@ -25,7 +25,7 @@ public class UserLoginMapperTests {
     @Test
     @Transactional
     public void testUserLoginMapper() {
-        UserVO userVO = userLoginMapper.findById("ehdzl1234");
+        UserVO userVO = userLoginMapper.findById("user01");
         log.info("uservo ------------- : " + userVO.toString());
     }
 }

@@ -32,7 +32,7 @@ public class inbound {
     @Transactional
     public void testFindProductsByIds() {
         // given
-        List<String> prodId = Arrays.asList("PRD-250428-U0D1R2");
+        List<String> prodId = Arrays.asList("PRD-0001");
 
         // when
         List<ProductDTO> products = userInboundMapper.getInboundInsert(prodId);
@@ -50,7 +50,7 @@ public class inbound {
     @Transactional
     public void test2(){
         // given
-        List<String> prodIds = Arrays.asList("PRD-250428-U0D1R2", "PRD-250428-160QW4"); // 실제 존재하는 prod_id로 테스트할 것
+        List<String> prodIds = Arrays.asList("PRD-0001", "PRD-0002"); // 실제 존재하는 prod_id로 테스트할 것
 
         // when
         List<ProductDTO> result = userInboundService.getInboundInsert(prodIds);

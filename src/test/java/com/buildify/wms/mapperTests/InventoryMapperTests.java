@@ -42,7 +42,7 @@ public class InventoryMapperTests {
     @DisplayName("회원 조회 mapper 테스트 코드")
     public void testInventoryUserMapperList(){
         // given
-        String testClientId = "USR-250428-3DRBPM";
+        String testClientId = "CLI-20240301-0001";
 
         //when
         List<InventoryDTO> result = inventoryUserMapper.getUserInventory(testClientId);
@@ -81,8 +81,8 @@ public class InventoryMapperTests {
     @DisplayName("회원 중분류 mapper 테스트 코드")
     public void testInventoryMapperUserMidCategory(){
         // given
-        String clientId = "USR-250428-3DRBPM";
-        String category1 = "PC";
+        String clientId = "CLI-20240301-0001";
+        String category1 = "건축자재";
 
 
         // when
@@ -102,7 +102,7 @@ public class InventoryMapperTests {
 //    public void testInventoryMapperUserSmallCategory(){
 //
 //        // given
-//        String clientId = "USR-250428-3DRBPM";
+//        String clientId = "CLI-20240301-0001";
 //        String category2 = "CPU";
 //
 //
@@ -135,7 +135,7 @@ public class InventoryMapperTests {
     @Transactional
     @DisplayName("관리자 수량 업데이트 테스트 코드")
     public void testUpdateQuantity(){
-        String inventoryId = "INV-202504287142";
+        String inventoryId = "INV-0001";
 
         // 1) 초기값 조회
         List<InventoryAdminDTO> allBefore = inventoryAdminMapper.getAdminInventory();

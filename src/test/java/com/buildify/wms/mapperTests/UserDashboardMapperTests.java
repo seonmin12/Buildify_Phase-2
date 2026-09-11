@@ -28,27 +28,27 @@ public class UserDashboardMapperTests {
     @Transactional
     public void testFindByClientId() {
 
-        int count1 = dashboardMapper.selectDayOutbound("USR-250424-XXCCVV", 0);
+        int count1 = dashboardMapper.selectDayOutbound("CLI-20240301-0001", 0);
         log.info("일간 출고 요청 : " + count1);
 
-        int count2 = dashboardMapper.selectWeekOutbound("USR-250424-XXCCVV", 0);
+        int count2 = dashboardMapper.selectWeekOutbound("CLI-20240301-0001", 0);
         log.info("주간 출고 요청: " + count2);
 
-        int count3 = dashboardMapper.selectDayInbound("USR-250424-XXCCVV", 0);
+        int count3 = dashboardMapper.selectDayInbound("CLI-20240301-0001", 0);
         log.info("일간 입고 요청: " + count3);
-        int count4 = dashboardMapper.selectWeekInbound("USR-250424-XXCCVV", 0);
+        int count4 = dashboardMapper.selectWeekInbound("CLI-20240301-0001", 0);
         log.info("주간 출고 요청: " + count4);
 
-        int count5 = dashboardMapper.selectDayOutbound("USR-250424-XXCCVV", 1);
+        int count5 = dashboardMapper.selectDayOutbound("CLI-20240301-0001", 1);
         log.info("일간 출고 승인 : " + count5);
 
-        int count6 = dashboardMapper.selectWeekOutbound("USR-250424-XXCCVV", 1);
+        int count6 = dashboardMapper.selectWeekOutbound("CLI-20240301-0001", 1);
         log.info("주간 출고 승인: " + count6);
 
-        int count7 = dashboardMapper.selectDayInbound("USR-250424-XXCCVV", 1);
+        int count7 = dashboardMapper.selectDayInbound("CLI-20240301-0001", 1);
         log.info("일간 입고 승인: " + count7);
 
-        int count8 = dashboardMapper.selectWeekInbound("USR-250424-XXCCVV", 1);
+        int count8 = dashboardMapper.selectWeekInbound("CLI-20240301-0001", 1);
         log.info("주간 출고 승인: " + count8);
     }
 }

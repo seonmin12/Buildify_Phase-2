@@ -25,7 +25,7 @@ public class AuthMapperTests {
     @Test
     @Transactional
     public void testFindById() {
-        AuthVO authVO = authMapper.findById("ehdzl3451");
+        AuthVO authVO = authMapper.findById("user01");
         log.info("---------------" + authVO);
     }
 }

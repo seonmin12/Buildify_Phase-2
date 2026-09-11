@@ -49,19 +49,19 @@ public class WareHouseLeaseMapperTests {
         List<UserWareHouseVO> userWareHouseVOList = new ArrayList<>();
 
         UserWareHouseVO userWareHouseVO = UserWareHouseVO.builder()
-                .wareId("W001")
+                .wareId("WH01")
                 .warehousePosX("A")
                 .warehousePosY(1)
-                .clientId("CLT-001-AAA")
+                .clientId("CLI-20240301-0001")
                 .wareEndDate(LocalDate.now())
                 .build();
         userWareHouseVOList.add(userWareHouseVO);
 
         UserWareHouseVO userWareHouseVO2 = UserWareHouseVO.builder()
-                .wareId("W001")
-                .warehousePosX("D")
-                .warehousePosY(4)
-                .clientId("USR-250418-7IBCKT")
+                .wareId("WH02")
+                .warehousePosX("B")
+                .warehousePosY(2)
+                .clientId("CLI-20240301-0002")
                 .wareEndDate(LocalDate.now())
                 .build();
         userWareHouseVOList.add(userWareHouseVO2);

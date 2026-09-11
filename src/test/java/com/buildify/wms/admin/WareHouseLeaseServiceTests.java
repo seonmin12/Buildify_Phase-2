@@ -88,17 +88,17 @@ public class WareHouseLeaseServiceTests {
         List<WarehouseLeaseDTO> warehouseLeaseDTOList = new ArrayList<>();
 
         WarehouseLeaseDTO userWareHouseDTO = WarehouseLeaseDTO.builder()
-                .wareId("W001")
+                .wareId("WH01")
                 .wareCoord("A1")
-                .clientId("USR-250428-RH5SYP")
+                .clientId("CLI-20240301-0001")
                 .endDate(LocalDate.now())
                 .build();
         warehouseLeaseDTOList.add(userWareHouseDTO);
 
         WarehouseLeaseDTO userWareHouseDTO2 = WarehouseLeaseDTO.builder()
-                .wareId("W001")
-                .wareCoord("A5")
-                .clientId("USR-250428-RHSL00")
+                .wareId("WH02")
+                .wareCoord("B2")
+                .clientId("CLI-20240301-0002")
                 .endDate(LocalDate.now())
                 .build();
         warehouseLeaseDTOList.add(userWareHouseDTO2);

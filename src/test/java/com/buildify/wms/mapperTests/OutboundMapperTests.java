@@ -41,7 +41,7 @@ public class OutboundMapperTests {
 
     @Test
     public void userountboundList(){
-        List<OutboundVO> vo = userOutboundMapper.outboundlist("PRD-250425-GKUAUK");
+        List<OutboundVO> vo = userOutboundMapper.outboundlist("CLI-20240301-0001");
         log.info("xptmxmpx");
         log.info(vo.size());
         for (int i = 0; i < vo.size(); i++) {
@@ -54,10 +54,10 @@ public class OutboundMapperTests {
     public void testOutboundList() {
         // given
 
-        String prodIds = "USR-250428-B4KEUU"; // 실제 존재하는 상품 ID 넣기
+        String clientId = "CLI-20240301-0001"; // outboundlist 는 client_id 로 조회한다
 
         // when
-        List<OutboundVO> productList = userOutboundMapper.outboundlist(prodIds);
+        List<OutboundVO> productList = userOutboundMapper.outboundlist(clientId);
 
         // then
         assertThat(productList).isNotNull();

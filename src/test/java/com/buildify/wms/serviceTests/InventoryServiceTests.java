@@ -43,7 +43,7 @@ public class InventoryServiceTests {
     public void setUpSecurityContext(){
         // 가짜 사용자 생성
         CustomUserDetails customUserDetails = new CustomUserDetails();
-        customUserDetails.setClientId("USR-250428-5S81OC");
+        customUserDetails.setClientId("CLI-20240301-0001");
         customUserDetails.setRole("0");
 
         // 인증 객체 만들기
@@ -66,7 +66,7 @@ public class InventoryServiceTests {
 
         // 반환된 모든 DTO의 clientId가 'CLT-001-AAA' 인지 검사
         list.forEach(dto ->
-                assertEquals("USR-250428-5S81OC", dto.getClientId(),
+                assertEquals("CLI-20240301-0001", dto.getClientId(),
                         "반환된 DTO의 clientId가 로그인한 회원과 일치해야 합니다")
         );
     }
@@ -78,7 +78,7 @@ public class InventoryServiceTests {
 //        InventoryFilterDTO filter = new InventoryFilterDTO();
 //
 //        // 테스트 SQL 스크립트에 맞춰 값을 세팅
-//        filter.setClientId("USR-250428-B4KEUU");
+//        filter.setClientId("CLI-20240301-0001");
 //        filter.setCategory1("PC");
 //        filter.setCategory2("CPU");
 //        filter.setCategory3("intel");
@@ -103,7 +103,7 @@ public class InventoryServiceTests {
     @Transactional
     @DisplayName("관리자 재고 수량 수정 테스트 코드")
     public void testInventoryUpdate(){
-        String inventoryId = "INV-202504288433";
+        String inventoryId = "INV-0001";
 
         // 1) 초기 수량 조회
         List<InventoryAdminDTO> beforeList = inventoryAdminService.getAdminInventory();
