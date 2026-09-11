@@ -6,18 +6,30 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
 ![Tomcat](https://img.shields.io/badge/Tomcat-9.0-F8DC75?logo=apachetomcat&logoColor=black)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonec2&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-HTTPS-F38020?logo=cloudflare&logoColor=white)
 
 창고 운영 전 과정을 웹으로 자동화·시각화하는 WMS(창고 관리 시스템)입니다.
-**Docker 한 줄로 전체 환경이 재현되며, AWS EC2 배포 구성을 포함합니다.**
+**Docker 한 줄로 전체 환경이 재현되며, AWS EC2 에 실제 배포되어 있습니다.**
 
-```bash
-cp .env.example .env && docker compose up -d --build   #  http://localhost:8080
-```
+### 🔗 라이브 데모 — **https://buildify-wms.co.kr**
 
 | 구분 | 계정 | 비밀번호 |
 |------|------|----------|
 | 관리자 | `admin01` | `admin1234!` |
 | 사용자 | `user01` ~ `user20` | `user1234!` |
+
+> 데모 서버는 비용 절감을 위해 상시 가동하지 않습니다.
+> 접속되지 않으면 아래 [화면 미리보기](#-화면-미리보기)로 확인하실 수 있고,
+> 필요하시면 연락 주시면 기동해 드립니다.
+
+### 로컬에서 실행
+
+```bash
+cp .env.example .env && docker compose up -d --build   #  http://localhost:8080
+```
+
+MySQL 을 따로 설치할 필요 없이 데모 데이터(상품 100 · 재고 100 · 입고 120 · 출고 100 · 회원 20)까지 자동으로 준비됩니다.
 
 <br>
 
@@ -108,12 +120,38 @@ Spring Security 기반 인증, 역할(관리자/사용자)에 따라 진입 화�
 ---
 
 ## 🚀 배포환경
+
 - 개발환경: Local (MacOS / Windows)
 - 서버: Tomcat 9.X (`javax.servlet` 기반 — Tomcat 10 이상 미지원)
 - DB: MySQL 8.x
-- 컨테이너: Docker / Docker Compose (앱 + MySQL, `docker compose up -d --build`)
-- 클라우드: AWS EC2 (Amazon Linux 2023) — 배포 절차는 [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md) 참고
-- 도메인/HTTPS: Cloudflare — 설정 절차는 [docs/DOMAIN-HTTPS.md](docs/DOMAIN-HTTPS.md) 참고
+- 컨테이너: Docker / Docker Compose
+- 클라우드: AWS EC2 t3.micro (Amazon Linux 2023, ap-northeast-2)
+- 도메인/HTTPS: Cloudflare (Full strict)
+
+### 구성도
+
+```
+방문자 ──HTTPS──▶ Cloudflare ──HTTPS──▶ Caddy:443 ──HTTP──▶ Tomcat 9:8080
+                  Universal SSL        Origin 인증서       ROOT.war
+                  (자동 갱신)          (2041년까지)             │
+                                                          MySQL 8.0
+                                                        (127.0.0.1 바인딩)
+```
+
+평문 구간은 컨테이너 내부 네트워크뿐이며, 인터넷을 지나는 모든 구간은 TLS 로 보호됩니다.
+인바운드는 **443(HTTPS)과 22(SSH, 고정 IP 제한)만** 개방합니다.
+
+### 이 배포에서 다룬 문제
+
+| 문제 | 해결 |
+|------|------|
+| Spring Boot 가 아닌 WAR 프로젝트 | Tomcat 9 이미지에 `ROOT.war` 배치 (fat JAR 방식 불가) |
+| 설정을 `application-secret.properties` 에서만 읽음 | 컨테이너 시작 시 환경변수로 파일을 생성 (앱 코드 무수정) |
+| 인스턴스 재시작 시 퍼블릭 IP 변경 | 부팅 시 Cloudflare DNS A 레코드 자동 갱신 (탄력적 IP 비용 회피) |
+| RAM 1GB 에서 Gradle 빌드 | 스왑 4GB + 컨테이너별 메모리 상한 + JVM 힙 조정 |
+| 앱 기동이 DB 초기화보다 빠름 | Compose healthcheck + `service_healthy` 조건 |
+
+자세한 절차는 [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md) 와 [docs/DOMAIN-HTTPS.md](docs/DOMAIN-HTTPS.md) 를 참고하세요.
 
 
 ---
