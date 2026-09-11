@@ -9,6 +9,9 @@
 ![AWS](https://img.shields.io/badge/AWS-EC2-FF9900?logo=amazonec2&logoColor=white)
 ![Cloudflare](https://img.shields.io/badge/Cloudflare-HTTPS-F38020?logo=cloudflare&logoColor=white)
 
+[![CI](https://github.com/seonmin12/Buildify_Phase-2/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/seonmin12/Buildify_Phase-2/actions/workflows/ci.yml)
+[![CD](https://github.com/seonmin12/Buildify_Phase-2/actions/workflows/cd.yml/badge.svg?branch=dev)](https://github.com/seonmin12/Buildify_Phase-2/actions/workflows/cd.yml)
+
 창고 운영 전 과정을 웹으로 자동화·시각화하는 WMS(창고 관리 시스템)입니다.
 **Docker 한 줄로 전체 환경이 재현되며, AWS EC2 에 실제 배포되어 있습니다.**
 
@@ -152,6 +155,34 @@ Spring Security 기반 인증, 역할(관리자/사용자)에 따라 진입 화�
 | 앱 기동이 DB 초기화보다 빠름 | Compose healthcheck + `service_healthy` 조건 |
 
 자세한 절차는 [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md) 와 [docs/DOMAIN-HTTPS.md](docs/DOMAIN-HTTPS.md) 를 참고하세요.
+
+### CI / CD
+
+```
+git push (dev)
+    │
+    ├─▶ CI   빌드 + 테스트 55개 (MySQL 서비스 컨테이너)        약 1분 50초
+    │
+    └─▶ CD   이미지 빌드 → GHCR 푸시 (linux/amd64, gha 캐시)   약 3분 20초
+                    │
+                    ▼
+         EC2 : buildify-update.timer (3분 주기 / 부팅 시 1회)
+                    │
+                    ▼
+         새 이미지면 app 컨테이너만 교체 → 기동 확인 → 미사용 이미지 정리
+```
+
+| 항목 | 내용 |
+|------|------|
+| [ci.yml](.github/workflows/ci.yml) | push·PR 마다 빌드와 테스트. 테스트가 실제 DB 연결을 요구하므로 MySQL 을 서비스 컨테이너로 띄우고 운영과 **동일한 초기화 스크립트**를 적재 |
+| [cd.yml](.github/workflows/cd.yml) | `dev` 반영 시 이미지를 빌드해 GHCR 에 푸시 (`latest` + 커밋 SHA 태그) |
+| [update-app.sh](docker/aws/update-app.sh) | 서버가 새 이미지를 확인해 교체. systemd timer 로 주기 실행 |
+
+**설계 의도**
+
+- **빌드를 러너로 옮긴 이유** — 운영 서버가 t3.micro(RAM 1GB) 라서 서버에서 Gradle 빌드를 돌리면 스왑을 긁으며 10~20분이 걸렸습니다. 빌드를 GitHub 러너에서 수행하고 서버는 완성된 이미지만 받도록 해 **배포 시간을 3분대로** 줄였습니다.
+- **push 대신 pull 방식을 택한 이유** — GitHub 러너의 IP 는 매번 바뀌어, Actions 에서 서버로 SSH 하려면 22 번 포트를 전 세계에 열어야 합니다. 그 대신 서버가 주기적으로 새 이미지를 확인하게 해서 **인바운드 노출을 늘리지 않았습니다.** (현재 개방 포트는 443, 그리고 고정 IP 로 제한한 22 뿐)
+- **설정 파일을 test 리소스에 두는 이유** — `main/resources` 에 두면 WAR 산출물과 Docker 이미지에 자격증명이 그대로 패키징됩니다.
 
 
 ---
