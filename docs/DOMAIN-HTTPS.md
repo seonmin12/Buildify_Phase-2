@@ -63,7 +63,10 @@ Cloudflare 대시보드 → 우측 상단 프로필 → **My Profile → API Tok
 
 생성된 토큰은 **한 번만 표시**되니 바로 복사해 둡니다.
 
-**Zone ID** 도 필요합니다. 도메인 개요(Overview) 페이지 우측 하단 **API** 영역에 있습니다.
+> **Zone ID 는 찾지 않아도 됩니다.** 스크립트가 토큰으로 자동 조회합니다.
+> 자동 조회가 실패하는 경우(토큰에 Zone:Read 권한이 없을 때)에만
+> 도메인 **Overview → 우측 컬럼 맨 아래 `API` 영역**의 Zone ID 를
+> 설정 파일의 `CF_ZONE_ID` 에 직접 넣어주세요.
 
 > 🔒 토큰은 저장소에 커밋하지 않습니다. 서버의 `/etc/buildify-ddns.env` 에만 둡니다.
 
@@ -91,9 +94,9 @@ sudo vi /etc/buildify-ddns.env
 
 ```properties
 CF_API_TOKEN=여기에_토큰
-CF_ZONE_ID=여기에_Zone_ID
 CF_RECORD_NAME=buildify-wms.co.kr
 CF_PROXIED=true
+# CF_ZONE_ID=  # 자동 조회가 실패할 때만 직접 입력
 ```
 
 등록하고 바로 실행합니다.
